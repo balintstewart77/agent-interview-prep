@@ -1,0 +1,62 @@
+[
+    {
+  "id": 1,
+  "question": "Explain the difference between Type I and Type II errors with examples",
+  "category": "statistics",
+  "difficulty": "entry_level"
+},
+{
+  "id": 2,
+  "question": "What is a p-value, and why is it often misunderstood?",
+  "category": "statistics", 
+  "difficulty": "entry_level"
+},
+{
+  "id": 3,
+  "question": "What is the Central Limit Theorem and why is it important for data science?",
+  "category": "statistics",
+  "difficulty": "entry_level"
+},
+{
+  "id": 4,
+  "question": "What's the difference between correlation and causation?",
+  "category": "statistics",
+  "difficulty": "entry_level"
+},
+{
+  "id": 5,
+  "question": "Explain the bias-variance tradeoff in machine learning",
+  "category": "machine_learning",
+  "difficulty": "entry_level"
+},
+{
+  "id": 6,
+  "question": "How do you handle class imbalance in a dataset?",
+  "category": "machine_learning",
+  "difficulty": "entry_level"
+},
+{
+  "id": 7,
+  "question": "What's the difference between bagging and boosting?",
+  "category": "machine_learning",
+  "difficulty": "entry_level"
+},
+{
+  "id": 8,
+  "question": "What are the key assumptions of linear regression?",
+  "category": "machine_learning",
+  "difficulty": "entry_level"
+},
+{
+  "id": 9,
+  "question": "How would you design an A/B test for a new feature?",
+  "category": "data_analysis",
+  "difficulty": "entry_level"
+},
+{
+  "id": 10,
+  "question": "You're given a dataset with 40% missing values in a key feature. Explain your approach to handle this missing data and justify your decision.",
+  "category": "data_analysis",
+  "difficulty": "entry_level"
+}
+]
