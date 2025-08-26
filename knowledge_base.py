@@ -291,13 +291,39 @@ def get_feedback_context(question_text):
         context = f"""
 RELEVANT CONCEPT KNOWLEDGE:
 Definition: {concept['definition']}
-
-Key Points: {', '.join(concept['key_points'])}
-
-Common Interview Red Flags: {', '.join(concept['interview_red_flags'])}
-
-Practical Application: {concept.get('practical_application', 'N/A')}
 """
+        
+        # Handle different key structures safely
+        key_info = []
+        
+        # Try different possible key names for main points
+        for key_name in ['key_points', 'key_components', 'assumptions']:
+            if key_name in concept:
+                if isinstance(concept[key_name], list):
+                    key_info.extend(concept[key_name])
+                elif isinstance(concept[key_name], dict):
+                    # For nested dicts like assumptions
+                    key_info.extend([f"{k}: {v}" for k, v in concept[key_name].items()])
+                break
+        
+        if key_info:
+            context += f"\nKey Points: {', '.join(key_info[:5])}"  # Limit to first 5 points
+        
+        # Add red flags if available
+        if 'interview_red_flags' in concept:
+            context += f"\n\nCommon Interview Red Flags: {', '.join(concept['interview_red_flags'])}"
+        
+        # Add practical application if available
+        practical = concept.get('practical_application', 
+                               concept.get('practical_considerations', 
+                                         concept.get('design_process', 'N/A')))
+        
+        if practical != 'N/A':
+            if isinstance(practical, list):
+                context += f"\n\nPractical Application: {', '.join(practical[:3])}"
+            else:
+                context += f"\n\nPractical Application: {practical}"
+        
         return context
     
     return "No specific concept knowledge found."

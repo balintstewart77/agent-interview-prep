@@ -5,7 +5,7 @@ from config import *
 from feedback_generator import generate_feedback, evaluate_answer_quality
 from followup_generator import generate_followup_question
 
-st.title("🎯 Data Science Interview Prep Agent")
+st.title("Data Science Interview Prep Agent")
 st.write("Practice technical questions with AI feedback")
 
 # Load questions
@@ -24,12 +24,10 @@ if "selected_question" not in st.session_state:
     st.session_state.selected_question = None
 if "conversation_history" not in st.session_state:
     st.session_state.conversation_history = []
-if "revision_mode" not in st.session_state:
-    st.session_state.revision_mode = False
-if "original_answer" not in st.session_state:
-    st.session_state.original_answer = ""
 if "current_followup" not in st.session_state:
     st.session_state.current_followup = None
+if "current_thread" not in st.session_state:
+    st.session_state.current_thread = []
 
 # Category selection
 selected_category = st.selectbox(
@@ -46,33 +44,55 @@ if st.button("Generate Question") and selected_category != "Select a category...
     st.session_state.selected_question = random.choice(category_questions)
     
     # Reset states when new question is generated
-    st.session_state.revision_mode = False
-    st.session_state.original_answer = ""
     st.session_state.current_followup = None
+    st.session_state.current_thread = []
     st.rerun()
 
-# Display selected question
+# Display selected question with persistent thread
 if st.session_state.selected_question:
     st.subheader("Your Interview Question:")
     st.write(f"**Category:** {st.session_state.selected_question['category'].replace('_', ' ').title()}")
     st.write(f"**Question:** {st.session_state.selected_question['question']}")
     
-    # Answer input - different key for revision vs initial
-    answer_key = "revised_answer" if st.session_state.revision_mode else "answer_input"
-    answer_label = "Your revised answer:" if st.session_state.revision_mode else "Your answer:"
+    # Display conversation thread
+    if st.session_state.current_thread:
+        st.markdown("---")
+        st.subheader("Conversation Thread")
+        
+        for i, entry in enumerate(st.session_state.current_thread):
+            # User's answer
+            with st.chat_message("user"):
+                attempt_label = f" (Attempt {i+1})" if i > 0 else ""
+                st.write(f"**Your Answer{attempt_label}:**")
+                st.write(entry['answer'])
+            
+            # AI feedback
+            with st.chat_message("assistant"):
+                st.write(f"**Feedback** (Quality: {entry['quality_score']}/5)")
+                st.write(entry['feedback'])
+                
+                # Show follow-up if exists
+                if entry.get('followup'):
+                    st.write(f"**Follow-up:** {entry['followup']}")
+                    
+                    if entry.get('followup_answer'):
+                        st.write(f"**Your Follow-up:** {entry['followup_answer']}")
+                        if entry.get('followup_feedback'):
+                            st.write(f"**Follow-up Feedback:** {entry['followup_feedback']}")
+        
+        st.markdown("---")
     
-    user_answer = st.text_area(answer_label, height=200, key=answer_key)
+    # Answer input section - always visible
+    answer_label = "Your answer:" if not st.session_state.current_thread else "Try another answer:"
+    user_answer = st.text_area(answer_label, height=200, key=f"answer_input_{len(st.session_state.current_thread)}")
     
-    # Different button text based on mode
-    button_text = "Get Feedback on Revision" if st.session_state.revision_mode else "Get Feedback"
-    
-    if st.button(button_text) and user_answer.strip():
+    if st.button("Submit Answer") and user_answer.strip():
         with st.spinner("Generating feedback..."):
             # Generate feedback
             feedback = generate_feedback(
                 st.session_state.selected_question['question'], 
                 user_answer,
-                iteration=2 if st.session_state.revision_mode else 1
+                iteration=len(st.session_state.current_thread) + 1
             )
             
             # Evaluate quality
@@ -81,52 +101,10 @@ if st.session_state.selected_question:
                 user_answer
             )
             
-            # Display feedback
-            st.subheader("📋 Feedback")
-            st.write(feedback)
-            
-            # Quality indicator
-            quality_labels = {
-                1: "Needs Work 📚", 
-                2: "Getting There 📈", 
-                3: "Good Start 👍", 
-                4: "Strong Answer 💪", 
-                5: "Excellent! 🌟"
-            }
-            st.info(f"**Answer Quality:** {quality_score}/5 - {quality_labels.get(quality_score, 'Unknown')}")
-            
-            # DECISION POINT: What happens next based on quality and revision status
-            
-            if quality_score <= 2 and not st.session_state.revision_mode:
-                # Poor initial answer - encourage revision
-                st.warning("💡 **Suggestion:** Your answer could be stronger. Try revising it based on the feedback above before we move to follow-up questions.")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("🔄 Revise My Answer", type="primary"):
-                        st.session_state.revision_mode = True
-                        st.session_state.original_answer = user_answer
-                        st.rerun()
-                        
-                with col2:
-                    if st.button("➡️ Move to Follow-up Anyway"):
-                        # Generate follow-up even for poor answer if they insist
-                        followup_question = generate_followup_question(
-                            st.session_state.selected_question['question'],
-                            user_answer,
-                            feedback,
-                            quality_score,
-                            is_revision=False
-                        )
-                        
-                        if followup_question:
-                            st.session_state.current_followup = followup_question
-                            st.rerun()
-            
-            else:
-                # Good answer (3+) or revised answer - proceed to follow-up
-                is_revision = st.session_state.revision_mode
-                
+            # Generate follow-up if appropriate
+            is_revision = len(st.session_state.current_thread) > 0
+            followup_question = None
+            if quality_score >= 3 or is_revision:
                 followup_question = generate_followup_question(
                     st.session_state.selected_question['question'],
                     user_answer,
@@ -134,81 +112,161 @@ if st.session_state.selected_question:
                     quality_score,
                     is_revision=is_revision
                 )
-                
-                if followup_question:
-                    st.subheader("🤔 Follow-up Question")
-                    st.success("Great! Your answer is solid enough for a follow-up question:")
-                    st.info(followup_question)
-                    st.session_state.current_followup = followup_question
-                elif quality_score >= 5:
-                    st.success("🌟 Excellent answer! No follow-up needed.")
-                
-                # Show improvement if this was a revision
-                if is_revision and st.session_state.original_answer:
-                    with st.expander("📈 See Your Improvement"):
-                        st.write("**Original Answer:**")
-                        st.write(st.session_state.original_answer[:200] + "..." if len(st.session_state.original_answer) > 200 else st.session_state.original_answer)
-                        st.write("**Revised Answer:**")
-                        st.write(user_answer[:200] + "..." if len(user_answer) > 200 else user_answer)
             
-            # Store in conversation history
-            st.session_state.conversation_history.append({
-                "question": st.session_state.selected_question,
+            # Add to current thread
+            thread_entry = {
                 "answer": user_answer,
                 "feedback": feedback,
                 "quality_score": quality_score,
-                "followup": followup_question if 'followup_question' in locals() else None,
-                "is_revision": st.session_state.revision_mode
+                "followup": followup_question,
+                "attempt_number": len(st.session_state.current_thread) + 1
+            }
+            
+            st.session_state.current_thread.append(thread_entry)
+            
+            # Also add to main conversation history
+            st.session_state.conversation_history.append({
+                "question": st.session_state.selected_question,
+                **thread_entry
             })
             
-            # Reset revision mode after processing
-            if st.session_state.revision_mode:
-                st.session_state.revision_mode = False
-                st.session_state.original_answer = ""
+            st.rerun()
 
-# Follow-up answer section
-if st.session_state.current_followup:
-    st.markdown("---")
-    st.subheader("🎯 Answer the Follow-up")
-    st.write(f"**Follow-up Question:** {st.session_state.current_followup}")
+# Follow-up answer section - only show if there's a pending follow-up
+if (st.session_state.current_thread and 
+    st.session_state.current_thread[-1].get('followup') and 
+    not st.session_state.current_thread[-1].get('followup_answer')):
     
-    followup_answer = st.text_area("Your follow-up answer:", height=150, key="followup_answer")
+    current_followup = st.session_state.current_thread[-1]['followup']
+    
+    st.markdown("---")
+    st.subheader("Answer the Follow-up")
+    st.write(f"**Follow-up:** {current_followup}")
+    
+    followup_answer = st.text_area("Your follow-up answer:", height=150, key="followup_answer_input")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Submit Follow-up Answer"):
+        if st.button("Submit Follow-up"):
             if followup_answer.strip():
-                with st.spinner("Analyzing your follow-up..."):
-                    # Generate feedback on follow-up
-                    followup_feedback = generate_feedback(st.session_state.current_followup, followup_answer)
-                    followup_quality = evaluate_answer_quality(st.session_state.current_followup, followup_answer)
+                with st.spinner("Analyzing follow-up..."):
+                    followup_feedback = generate_feedback(current_followup, followup_answer)
+                    followup_quality = evaluate_answer_quality(current_followup, followup_answer)
                     
-                    st.subheader("📋 Follow-up Feedback")
-                    st.write(followup_feedback)
-                    st.info(f"**Follow-up Quality:** {followup_quality}/5")
+                    # Update the last thread entry with follow-up info
+                    st.session_state.current_thread[-1]['followup_answer'] = followup_answer
+                    st.session_state.current_thread[-1]['followup_feedback'] = followup_feedback
+                    st.session_state.current_thread[-1]['followup_quality'] = followup_quality
                     
-                    # Update conversation history with follow-up
+                    # Update main history too
                     if st.session_state.conversation_history:
-                        st.session_state.conversation_history[-1]["followup_answer"] = followup_answer
-                        st.session_state.conversation_history[-1]["followup_feedback"] = followup_feedback
-                        st.session_state.conversation_history[-1]["followup_quality"] = followup_quality
+                        st.session_state.conversation_history[-1]['followup_answer'] = followup_answer
+                        st.session_state.conversation_history[-1]['followup_feedback'] = followup_feedback
+                        st.session_state.conversation_history[-1]['followup_quality'] = followup_quality
                     
-                    # Clear the follow-up
-                    st.session_state.current_followup = None
-                    
-                    st.success("🎉 Great job completing the full interview sequence!")
+                    st.rerun()
                     
     with col2:
         if st.button("Skip Follow-up"):
-            st.session_state.current_followup = None
+            st.session_state.current_thread[-1]['followup_skipped'] = True
             st.rerun()
+
+# Student can ask clarifying questions - only after submitting at least one answer
+if st.session_state.current_thread:
+    st.markdown("---")
+    st.subheader("Need Help Understanding?")
+    st.write("Ask for clarification on any concept you're struggling with:")
+    
+    student_question = st.text_area(
+        "Your question:", 
+        height=100, 
+        placeholder="e.g., 'Can you give me a concrete example of high bias vs high variance?'",
+        key=f"student_question_{len(st.session_state.current_thread)}"
+    )
+    
+    if st.button("Ask Question") and student_question.strip():
+        with st.spinner("Providing clarification..."):
+            # Get relevant knowledge base context
+            from knowledge_base import get_feedback_context
+            context = get_feedback_context(st.session_state.selected_question['question'])
+            
+            # Reference their most recent answer for context
+            recent_answer = st.session_state.current_thread[-1]['answer']
+            
+            clarification_prompt = f"""
+            You are a patient data science tutor helping a student understand concepts.
+            
+            ORIGINAL INTERVIEW QUESTION: {st.session_state.selected_question['question']}
+            THEIR RECENT ANSWER: {recent_answer}
+            STUDENT'S QUESTION: {student_question}
+            
+            RELEVANT KNOWLEDGE:
+            {context}
+            
+            Provide a clear, helpful explanation that:
+            1. Directly answers their specific question
+            2. Uses concrete examples
+            3. References their previous answer to build understanding
+            4. Keeps it concise and interview-focused
+            
+            Be conversational and supportive.
+            """
+            
+            try:
+                from config import client, MODEL_NAME
+                response = client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[
+                        {"role": "system", "content": "You are a supportive data science tutor who gives clear explanations with examples."},
+                        {"role": "user", "content": clarification_prompt}
+                    ],
+                    max_tokens=300,
+                    temperature=0.7
+                )
+                
+                clarification = response.choices[0].message.content
+                
+                # Display in chat format
+                with st.chat_message("user"):
+                    st.write(f"**Your Question:** {student_question}")
+                
+                with st.chat_message("assistant"):
+                    st.write(f"**Clarification:** {clarification}")
+                
+                # Add to thread for context (optional)
+                clarification_entry = {
+                    "type": "clarification",
+                    "student_question": student_question,
+                    "clarification": clarification
+                }
+                
+                # You could add this to current_thread if you want to persist it
+                # st.session_state.current_thread.append(clarification_entry)
+                
+            except Exception as e:
+                st.error(f"Error providing clarification: {str(e)}")
+
+# New question button - clears current thread
+if st.session_state.current_thread:
+    st.markdown("---")
+    if st.button("New Question"):
+        st.session_state.selected_question = None
+        st.session_state.current_thread = []  # Clear thread for new question
+        st.rerun()
 
 # Enhanced conversation history display
 if st.session_state.conversation_history:
-    with st.expander("📚 Interview History", expanded=False):
+    with st.expander("Interview History", expanded=False):
         for i, item in enumerate(st.session_state.conversation_history):
+            attempt_type = ""
+            if item.get('is_revision'):
+                attempt_type = " (Revised)"
+            elif item.get('is_different_attempt'):
+                attempt_type = " (Alternative Answer)"
+                
             st.write(f"**Q{i+1}:** {item['question']['question']}")
-            st.write(f"**Quality:** {item['quality_score']}/5 {'(Revised)' if item.get('is_revision') else ''}")
+            st.write(f"**Quality:** {item['quality_score']}/5{attempt_type}")
+            st.write(f"**Answer:** {item['answer'][:100]}...")
             
             if item.get('followup'):
                 st.write(f"**Follow-up:** {item['followup']}")
@@ -219,10 +277,9 @@ if st.session_state.conversation_history:
 
 # Reset button for new interview session
 if st.session_state.conversation_history:
-    if st.button("🔄 Start New Interview Session"):
+    if st.button("Clear All History"):
         st.session_state.conversation_history = []
         st.session_state.selected_question = None
+        st.session_state.current_thread = []
         st.session_state.current_followup = None
-        st.session_state.revision_mode = False
-        st.session_state.original_answer = ""
         st.rerun()
