@@ -1,0 +1,181 @@
+{
+  "type_i_ii_errors": {
+    "clarification": [
+      "Can you give me a concrete example of when Type I error would be more costly than Type II?",
+      "How would you explain this to a non-technical stakeholder?",
+      "What's the relationship between Type I error and statistical power?"
+    ],
+    "gap_filling": [
+      "How do you decide what alpha level to use in practice?", 
+      "Walk me through how this applies to A/B testing decisions",
+      "What happens to Type II error when you decrease Type I error?"
+    ],
+    "advanced_application": [
+      "How does this concept relate to precision and recall in classification?",
+      "In multiple testing scenarios, how would you adjust for these errors?",
+      "How would you design an experiment to minimize both error types?"
+    ]
+  },
+  
+  "p_value": {
+    "clarification": [
+      "Can you rephrase what p-value means in plain English?",
+      "What's wrong with saying 'p-value is the probability the null hypothesis is true'?",
+      "Why is the 0.05 threshold commonly used?"
+    ],
+    "gap_filling": [
+      "What's the difference between statistical and practical significance?",
+      "How does sample size affect p-values?",
+      "What is p-hacking and how do you avoid it?"
+    ],
+    "advanced_application": [
+      "How would you handle multiple comparisons in your analysis?",
+      "When might you use a different significance threshold than 0.05?",
+      "How do confidence intervals relate to p-values?"
+    ]
+  },
+  
+  "central_limit_theorem": {
+    "clarification": [
+      "Does the original data need to be normally distributed for CLT to work?",
+      "What happens to the sampling distribution as sample size increases?",
+      "Why is n=30 often mentioned as a rule of thumb?"
+    ],
+    "gap_filling": [
+      "How does this theorem enable us to do hypothesis testing?",
+      "What's the relationship between standard error and sample size?",
+      "How does CLT apply to bootstrap methods?"
+    ],
+    "advanced_application": [
+      "How would you apply CLT when working with skewed data?",
+      "What are the practical implications for A/B testing?",
+      "How does this relate to confidence interval construction?"
+    ]
+  },
+  
+  "correlation_vs_causation": {
+    "clarification": [
+      "Can you give me an example of strong correlation but no causation?",
+      "What makes establishing causation so difficult?",
+      "How is reverse causation different from confounding?"
+    ],
+    "gap_filling": [
+      "How would you design an experiment to test causation?",
+      "What role do confounding variables play?",
+      "When might correlation actually imply causation?"
+    ],
+    "advanced_application": [
+      "How do instrumental variables help establish causation?",
+      "What is a natural experiment and when would you use one?",
+      "How do you handle unmeasured confounders?"
+    ]
+  },
+  
+  "bias_variance_tradeoff": {
+    "clarification": [
+      "Can you give specific examples of high bias vs high variance models?",
+      "What does it mean that you can't minimize both simultaneously?",
+      "How is this different from statistical bias?"
+    ],
+    "gap_filling": [
+      "How would you diagnose whether your model has high bias or variance?",
+      "What techniques help reduce variance? What about bias?",
+      "How do learning curves help visualize this tradeoff?"
+    ],
+    "advanced_application": [
+      "How does regularization affect the bias-variance tradeoff?",
+      "How does this tradeoff change with ensemble methods?",
+      "What's the relationship between model complexity and this tradeoff?"
+    ]
+  },
+  
+  "class_imbalance": {
+    "clarification": [
+      "Why does accuracy become misleading with imbalanced classes?",
+      "What's the difference between oversampling and undersampling?",
+      "When would you choose SMOTE over random oversampling?"
+    ],
+    "gap_filling": [
+      "How do you choose appropriate evaluation metrics for imbalanced data?",
+      "What's the difference between macro and micro averaging?",
+      "How do class weights work in practice?"
+    ],
+    "advanced_application": [
+      "How would you handle multi-class imbalance problems?",
+      "What's the relationship between class imbalance and calibration?",
+      "How do you balance business costs with technical metrics?"
+    ]
+  },
+  
+  "bagging_vs_boosting": {
+    "clarification": [
+      "What makes bagging 'parallel' and boosting 'sequential'?",
+      "Can you give specific algorithm examples of each?",
+      "Which approach typically reduces bias vs variance?"
+    ],
+    "gap_filling": [
+      "When would you choose Random Forest over XGBoost?",
+      "How do you prevent overfitting in boosting algorithms?",
+      "What's the role of bootstrap sampling in bagging?"
+    ],
+    "advanced_application": [
+      "How do you tune hyperparameters differently for bagging vs boosting?",
+      "What's the computational complexity comparison?",
+      "How do these approaches handle feature importance differently?"
+    ]
+  },
+  
+  "linear_regression_assumptions": {
+    "clarification": [
+      "Which assumption is most critical for reliable predictions?",
+      "What's the difference between independence and multicollinearity?",
+      "Why does the normality assumption matter?"
+    ],
+    "gap_filling": [
+      "How would you test for heteroscedasticity?",
+      "What's VIF and what threshold indicates multicollinearity?",
+      "How do you interpret residual plots?"
+    ],
+    "advanced_application": [
+      "When would you use robust regression instead?",
+      "How does Ridge regression help with multicollinearity?",
+      "What are the implications of violating assumptions on inference?"
+    ]
+  },
+  
+  "ab_test_design": {
+    "clarification": [
+      "What's the difference between randomization and random sampling?",
+      "Why is sample size calculation important before running the test?",
+      "What makes a good success metric for A/B testing?"
+    ],
+    "gap_filling": [
+      "How do you handle seasonality in your test design?",
+      "What's the multiple testing problem in A/B tests?",
+      "How long should you run an A/B test?"
+    ],
+    "advanced_application": [
+      "How would you design a test when there are network effects?",
+      "What's the difference between statistical and business significance?",
+      "How do you handle A/A tests for validation?"
+    ]
+  },
+  
+  "missing_data_handling": {
+    "clarification": [
+      "What's the difference between MCAR, MAR, and MNAR?",
+      "Why is 40% missing data particularly challenging?",
+      "When is it acceptable to just delete missing rows?"
+    ],
+    "gap_filling": [
+      "How would you determine the missingness mechanism?",
+      "What's the difference between mean imputation and KNN imputation?",
+      "How do you preserve relationships between variables during imputation?"
+    ],
+    "advanced_application": [
+      "When would you use multiple imputation?",
+      "How do you handle missing data in time series?",
+      "What are the trade-offs between different imputation methods?"
+    ]
+  }
+}
