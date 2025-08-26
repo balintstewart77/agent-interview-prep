@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+env/
+
+# Environment variables (like API keys)
+.env
+
+# Pyhton
+__pycache__/
+*.py[cod]
+*$py.class
+*.__pycache__
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log 
