@@ -17,6 +17,6 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Debug check (remove after testing)
 if not OPENAI_API_KEY:
-    print("⚠️  Warning: OPENAI_API_KEY not found in environment variables")
+    print("OPENAI_API_KEY not found in environment variables")
 else:
-    print("✅ OpenAI client initialized successfully")
+    print("OpenAI client initialised successfully")

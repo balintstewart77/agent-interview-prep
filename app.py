@@ -4,6 +4,7 @@ import random
 from config import *
 from feedback_generator import generate_feedback, evaluate_answer_quality
 from followup_generator import generate_followup_question
+from clarification_handler import generate_clarification, is_valid_clarification_question
 
 st.title("Data Science Interview Prep Agent")
 st.write("Practice technical questions with AI feedback")
@@ -180,7 +181,7 @@ if st.session_state.current_thread:
     student_question = st.text_area(
         "Your question:", 
         height=100, 
-        placeholder="e.g., 'Can you give me a concrete example of high bias vs high variance?'",
+        placeholder="e.g., 'Can you provide some examples of methods to reduce model overfitting?'",
         key=f"student_question_{len(st.session_state.current_thread)}"
     )
     
@@ -193,58 +194,33 @@ if st.session_state.current_thread:
             # Reference their most recent answer for context
             recent_answer = st.session_state.current_thread[-1]['answer']
             
-            clarification_prompt = f"""
-            You are a patient data science tutor helping a student understand concepts.
+            # Generate clarification
+            clarification = generate_clarification(
+                st.session_state.selected_question['question'],
+                recent_answer,
+                student_question
+            )
             
-            ORIGINAL INTERVIEW QUESTION: {st.session_state.selected_question['question']}
-            THEIR RECENT ANSWER: {recent_answer}
-            STUDENT'S QUESTION: {student_question}
+            # Display in chat format
+            with st.chat_message("user"):
+                st.write(f"**Your Question:** {student_question}")
             
-            RELEVANT KNOWLEDGE:
-            {context}
+            with st.chat_message("assistant"):
+                st.write(f"**Clarification:** {clarification}")
             
-            Provide a clear, helpful explanation that:
-            1. Directly answers their specific question
-            2. Uses concrete examples
-            3. References their previous answer to build understanding
-            4. Keeps it concise and interview-focused
+            # Optional: Add to thread for persistence
+            clarification_entry = {
+                "type": "clarification",
+                "student_question": student_question,
+                "clarification": clarification,
+                "timestamp": len(st.session_state.current_thread)
+            }
             
-            Be conversational and supportive.
-            """
+            # Store clarifications separately for better organization
+            if "clarifications" not in st.session_state:
+                st.session_state.clarifications = []
+            st.session_state.clarifications.append(clarification_entry)
             
-            try:
-                from config import client, MODEL_NAME
-                response = client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=[
-                        {"role": "system", "content": "You are a supportive data science tutor who gives clear explanations with examples."},
-                        {"role": "user", "content": clarification_prompt}
-                    ],
-                    max_tokens=300,
-                    temperature=0.7
-                )
-                
-                clarification = response.choices[0].message.content
-                
-                # Display in chat format
-                with st.chat_message("user"):
-                    st.write(f"**Your Question:** {student_question}")
-                
-                with st.chat_message("assistant"):
-                    st.write(f"**Clarification:** {clarification}")
-                
-                # Add to thread for context (optional)
-                clarification_entry = {
-                    "type": "clarification",
-                    "student_question": student_question,
-                    "clarification": clarification
-                }
-                
-                # You could add this to current_thread if you want to persist it
-                # st.session_state.current_thread.append(clarification_entry)
-                
-            except Exception as e:
-                st.error(f"Error providing clarification: {str(e)}")
 
 # New question button - clears current thread
 if st.session_state.current_thread:
