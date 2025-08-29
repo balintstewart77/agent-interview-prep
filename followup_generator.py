@@ -39,7 +39,7 @@ class FollowupGenerator:
                     })
         
         if all_patterns:
-            self.pattern_embeddings = self.embedder.encode(all_patterns)
+            self.pattern_embeddings = self.embedder.encode(all_patterns, normalize_embeddings= True) # normalise for cosine sim instead of plain dot product
         else:
             self.pattern_embeddings = np.array([])
     
@@ -60,36 +60,38 @@ class FollowupGenerator:
                 return "gap_filling"
     
     def retrieve_relevant_patterns(self, original_question, user_answer, followup_type, top_k=3):
-        """Use RAG to retrieve most relevant followup patterns"""
+        """Use RAG to retrieve most relevant follow-up patterns (cosine + small boosts)."""
         if len(self.pattern_embeddings) == 0:
             return []
-        
-        # Create query embedding from question and answer
+
+        # 1) Query embedding (unit-normalised) → cosine similarity in [-1, 1]
         query_text = f"{original_question} {user_answer}"
-        query_embedding = self.embedder.encode([query_text])
-        
-        # Calculate similarities
-        similarities = np.dot(query_embedding, self.pattern_embeddings.T).flatten()
-        
-        # Filter by followup type and concept
+        query_embedding = self.embedder.encode([query_text], normalize_embeddings=True)  # shape (1, d)
+        sim = (query_embedding @ self.pattern_embeddings.T).ravel()  # cosine in [-1, 1]
+
+        # 2) Concept/type features (vectorised)
         concept = self.get_concept_from_question(original_question)
-        filtered_indices = []
-        
-        for i, metadata in enumerate(self.pattern_metadata):
-            # Prefer same concept and desired followup type
-            score_boost = 0
-            if metadata['concept'] == concept:
-                score_boost += 0.3
-            if metadata['category'] == followup_type:
-                score_boost += 0.2
-                
-            similarities[i] += score_boost
-            filtered_indices.append(i)
-        
-        # Get top k most similar patterns
-        top_indices = np.argsort(similarities)[-top_k:][::-1]
-        
-        return [self.pattern_metadata[i] for i in top_indices if i in filtered_indices]
+        concept_match = np.array([m['concept'] == concept for m in self.pattern_metadata], dtype=np.float32)
+        type_match    = np.array([m['category'] == followup_type for m in self.pattern_metadata], dtype=np.float32)
+
+        # 3) Prefer same concept: if any exist (and concept not "general"), restrict ranking to them
+        if concept != "general" and concept_match.any():
+            mask = concept_match.astype(bool)
+        else:
+            mask = np.ones_like(sim, dtype=bool)
+
+        # 4) Blend similarity (mapped to [0,1]) with small boosts so sim stays dominant
+        sim01 = (sim + 1.0) / 2.0  # [-1,1] → [0,1]
+        w_sim, w_concept, w_type = 0.85, 0.10, 0.05
+        final = w_sim * sim01 + w_concept * concept_match + w_type * type_match
+
+        # 5) Rank within mask and return top_k
+        idx = np.where(mask)[0]
+        if idx.size == 0:
+            return []
+        top = idx[np.argsort(final[idx])[-min(top_k, idx.size):][::-1]]
+        return [self.pattern_metadata[i] for i in top]
+
     
     def get_concept_from_question(self, question_text):
         """Extract concept key from question text"""

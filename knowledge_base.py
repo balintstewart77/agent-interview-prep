@@ -141,6 +141,13 @@ INTERVIEW_CONCEPTS = {
     
     "bagging_vs_boosting": {
         "definition": "Bagging: parallel weak learners on bootstrap samples. Boosting: sequential weak learners focusing on mistakes",
+        "key_points": [
+        "Bagging: parallel weak learners on bootstrap samples",
+        "Boosting: sequential weak learners focusing on mistakes",
+        "Bagging reduces variance, boosting reduces bias and variance",
+        "Examples: Random Forest (bagging), XGBoost (boosting)",
+        "Bagging is parallelizable, boosting is sequential"
+    ],
         "bagging": {
             "how_it_works": "Train multiple models on bootstrap samples, average predictions",
             "examples": "Random Forest, Extra Trees",
@@ -166,13 +173,13 @@ INTERVIEW_CONCEPTS = {
     
     "linear_regression_assumptions": {
         "definition": "Key assumptions that must hold for linear regression to provide reliable results",
-        "assumptions": {
-            "linearity": "Relationship between features and target is linear",
-            "independence": "Observations are independent of each other",
-            "homoscedasticity": "Constant variance of residuals",
-            "normality": "Residuals are normally distributed",
-            "no_multicollinearity": "Features are not highly correlated"
-        },
+        "key_points": [
+            "linearity: Relationship between features and target is linear",
+            "independence: Observations are independent of each other",
+            "homoscedasticity: Constant variance of residuals",
+            "normality: Residuals are normally distributed",
+            "no_multicollinearity: Features are not highly correlated"
+        ],
         "diagnostics": {
             "linearity": "Residuals vs fitted plots, partial regression plots",
             "independence": "Durbin-Watson test, residual autocorrelation",
@@ -195,11 +202,12 @@ INTERVIEW_CONCEPTS = {
     
     "ab_test_design": {
         "definition": "Controlled experiment to compare two or more variants to determine which performs better",
-        "key_components": [
-            "Clear hypothesis and success metrics",
-            "Random assignment to treatment/control",
-            "Sufficient sample size (power analysis)",
-            "Statistical significance testing"
+        "key_points": [
+            "Define a clear hypothesis and success metrics",
+            "Randomly assign subjects to treatment/control",
+            "Ensure sufficient sample size via power analysis",
+            "Run the test for a fixed, predetermined duration",
+            "Analyse with appropriate statistical tests; report effect size and confidence interval"
         ],
         "design_process": [
             "Define hypothesis and metrics",
@@ -229,6 +237,13 @@ INTERVIEW_CONCEPTS = {
     
     "missing_data_handling": {
         "definition": "Systematic approach to deal with incomplete data in datasets",
+        "key_points": [
+            "Understand the mechanism of missingness (MCAR, MAR, MNAR)",
+            "Assess the impact of missingness on analysis validity",
+            "Choose an appropriate handling strategy (deletion, imputation, etc.)",
+            "Preserve variable relationships when imputing data",
+            "Document assumptions and validate chosen approach"
+        ],
         "missing_data_types": {
             "MCAR": "Missing Completely At Random - missing independent of observed/unobserved data",
             "MAR": "Missing At Random - missing depends on observed data only", 
